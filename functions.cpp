@@ -14,8 +14,9 @@ void processOperation(const std::string &opcode, const std::vector<std::string> 
     output += ": ";
 
     std::map<std::string, int> opcodeMap = {
-        {"ADD", 1}, {"SUB", 2}, {"AND", 3}, {"MOV", 4}, {"AND", 5}, {"OR", 6},
-        {"XOR", 7}, {"LOAD", 8}, {"STORE", 9}, {"BAL", 10}, {"BEQ", 11}, {"BNE", 12}
+        {"ADD", 1}, {"SUB", 2}, {"CMP", 3}, {"MOV", 4}, {"AND", 5}, {"ORR", 6},
+        {"EOR", 7}, {"LDR", 8}, {"STR", 9}, {"LSL", 10}, {"LSR", 11},
+        {"MVN", 12}, {"BEQ", 13}
     };
 
     std::map<std::string, int> registerMap = {
@@ -297,4 +298,56 @@ void printArrays(std::string registers[], std::string memory[]) {
               << " 0x10C = 0x" << (memory[3].empty() ? "0" : memory[3]) 
               << " 0x110 = 0x" << (memory[4].empty() ? "0" : memory[4]) 
               << std::endl;
+}
+
+OpcodeInfo parseOpcode(const std::string& opcode) {
+    OpcodeInfo info;
+    info.updatesFlags = false;
+    info.condition = ""; // Default: no condition (unconditional execution)
+
+    // Check for 'S' flag
+    if (opcode.length() >= 1 && opcode.back() == 'S') {
+        info.updatesFlags = true;
+        // Remove 'S' for further parsing
+        std::string temp = opcode.substr(0, opcode.length() - 1);
+        // Check for condition (last 2 characters)
+        if (temp.length() >= 2) {
+            std::string potentialCond = temp.substr(temp.length() - 2);
+            if (potentialCond == "GT" || potentialCond == "GE" || potentialCond == "LT" ||
+                potentialCond == "LE" || potentialCond == "EQ" || potentialCond == "NE") {
+                info.condition = potentialCond;
+                info.baseOpcode = temp.substr(0, temp.length() - 2);
+            } else {
+                info.baseOpcode = temp;
+            }
+        } else {
+            info.baseOpcode = temp;
+        }
+    } else {
+        // Check for condition without 'S'
+        if (opcode.length() >= 2) {
+            std::string potentialCond = opcode.substr(opcode.length() - 2);
+            if (potentialCond == "GT" || potentialCond == "GE" || potentialCond == "LT" ||
+                potentialCond == "LE" || potentialCond == "EQ" || potentialCond == "NE") {
+                info.condition = potentialCond;
+                info.baseOpcode = opcode.substr(0, opcode.length() - 2);
+            } else {
+                info.baseOpcode = opcode;
+            }
+        } else {
+            info.baseOpcode = opcode;
+        }
+    }
+    return info;
+}
+
+bool shouldExecute(const std::string& condition, int nzcv[]) {
+    if (condition.empty()) return true; // Unconditional execution
+    if (condition == "GT") return nzcv[1] == 0 && nzcv[0] == nzcv[3]; // Z == 0 && N == V
+    if (condition == "GE") return nzcv[0] == nzcv[3]; // N == V
+    if (condition == "LT") return nzcv[0] != nzcv[3]; // N != V
+    if (condition == "LE") return nzcv[1] == 1 || nzcv[0] != nzcv[3]; // Z == 1 || N != V
+    if (condition == "EQ") return nzcv[1] == 1; // Z == 1
+    if (condition == "NE") return nzcv[1] == 0; // Z == 0
+    return false; 
 }

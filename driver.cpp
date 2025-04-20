@@ -14,7 +14,7 @@ int main() {
     std::string memory[5];
     int nzcv[4] = {0, 0, 0, 0};
 
-    std::ifstream inputFile("pp2_input.txt");
+    std::ifstream inputFile("PP3_input.txt");
     std::string line;
 
     if (!inputFile.is_open()) {
