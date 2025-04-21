@@ -28,7 +28,7 @@ int main() {
 
     // Read and store instructions, identify labels
     while (std::getline(inputFile, line)) {
-        // Skip empty lines
+        // Just an edge case, not needed but included
         if (line.empty()) continue;
 
         // Trim leading/trailing whitespace from the line
@@ -40,8 +40,7 @@ int main() {
         std::string firstWord;
         iss >> firstWord;
 
-        // Check if the first word is a label (e.g., "SKIP")
-        // Since PP3_input.txt lacks ':', assume first word is a label if followed by a valid instruction
+        // Check if the first word is a label 
         std::string restOfLine;
         std::getline(iss, restOfLine);
         restOfLine.erase(0, restOfLine.find_first_not_of(" \t"));
@@ -75,7 +74,8 @@ int main() {
     }
     inputFile.close();
 
-    // Debug: Print labels map and instructions vector
+    // This is for debugging. The SKIP branch was not being taken to,
+    // Visualizing the labels helped see where instructions were being taken
     std::cout << "Labels map:\n";
     for (const auto& [label, index] : labels) {
         std::cout << "Label: " << label << ", Index: " << index << "\n";
