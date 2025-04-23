@@ -36,11 +36,11 @@ int main() {
         line.erase(line.find_last_not_of(" \t") + 1);
         if (line.empty()) continue;
 
+        // Separate the first "word"
+        // Block after this checks if word is label or opcode
         std::istringstream iss(line);
         std::string firstWord;
         iss >> firstWord;
-
-        // Check if the first word is a label 
         std::string restOfLine;
         std::getline(iss, restOfLine);
         restOfLine.erase(0, restOfLine.find_first_not_of(" \t"));
@@ -58,7 +58,7 @@ int main() {
         bool isLabel = !restOfLine.empty() && validOpcodes.count(potentialOpcode);
 
         if (isLabel) {
-            // First word is a label (e.g., SKIP)
+            // First word is a label (SKIP)
             std::string label = firstWord;
             labels[label] = instructions.size();
             // Store the instruction (rest of the line)
@@ -86,6 +86,7 @@ int main() {
     }
 
     // Process instructions using a program counter
+    // This helped implement the branching 
     size_t pc = 0;
     while (pc < instructions.size()) {
         // Skip empty instructions

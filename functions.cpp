@@ -5,9 +5,9 @@
 #include <map>
 
 OpcodeInfo parseOpcode(const std::string& opcode) {
-    OpcodeInfo info;
+    OpcodeInfo info; // Defined in functions.h
     info.updatesFlags = false;
-    info.condition = ""; // Default: no condition (unconditional execution)
+    info.condition = ""; // Default: no condition 
     std::string temp = opcode;
 
     // Check for 'S' flag (must be at the end)
@@ -52,7 +52,7 @@ bool shouldExecute(const std::string& condition, int nzcv[]) {
 }
 
 void updateNZCV(uint32_t result, uint32_t val1, uint32_t val2, bool isSubtraction, int nzcv[]) {
-    // N: Negative (most significant bit)
+    // N: Negative 
     nzcv[0] = (result & 0x80000000) ? 1 : 0;
     // Z: Zero
     nzcv[1] = (result == 0) ? 1 : 0;
@@ -79,7 +79,7 @@ size_t processOperation(const std::string& opcode, const std::vector<std::string
     // Parse the opcode
     OpcodeInfo info = parseOpcode(opcode);
     
-    // Build output string with commas
+    // Build output string 
     std::string output = opcode;
     for (size_t i = 0; i < operands.size(); ++i) {
         output += (i == 0 ? " " : ", ") + operands[i];
@@ -94,7 +94,7 @@ size_t processOperation(const std::string& opcode, const std::vector<std::string
         return currentPC + 1;
     }
 
-    // Map base opcode to operation
+    // Map opcode to operation
     std::map<std::string, int> opcodeMap = {
         {"ADD", 1}, {"SUB", 2}, {"CMP", 3}, {"MOV", 4}, {"AND", 5}, {"ORR", 6},
         {"EOR", 7}, {"LDR", 8}, {"STR", 9}, {"LSL", 10}, {"LSR", 11}, {"MVN", 12},
@@ -280,7 +280,7 @@ size_t processOperation(const std::string& opcode, const std::vector<std::string
         case 8: // LDR
             try {
                 registerIndex = registerMap.at(operands[0]); // Destination
-                // Check for register-indirect addressing, e.g., [R6]
+                // Check for pointer
                 std::string memOperand = operands[1];
                 if (memOperand.front() == '[' && memOperand.back() == ']') {
                     std::string reg = memOperand.substr(1, memOperand.length() - 2); // Remove [ ]
@@ -293,9 +293,6 @@ size_t processOperation(const std::string& opcode, const std::vector<std::string
                             int memoryIndex = memoryMap.at(addrStr);
                             uint32_t value = (memory[memoryIndex].empty() ? 0 : std::stoul(memory[memoryIndex], nullptr, 16));
                             registers[registerIndex] = toHexString(value);
-                            if (info.updatesFlags) {
-                                updateNZCV(value, value, 0, false, nzcv);
-                            }
                             printArrays(registers, memory, nzcv);
                             std::cout << "\n";
                         } else {
@@ -324,7 +321,7 @@ size_t processOperation(const std::string& opcode, const std::vector<std::string
         case 9: // STR
             try {
                 registerIndex = registerMap.at(operands[0]); // Source
-                // Check for register-indirect addressing, e.g., [R6]
+                // Check for pointer
                 std::string memOperand = operands[1];
                 if (memOperand.front() == '[' && memOperand.back() == ']') {
                     std::string reg = memOperand.substr(1, memOperand.length() - 2); // Remove [ ]
@@ -455,12 +452,15 @@ size_t processOperation(const std::string& opcode, const std::vector<std::string
     }
 }
 
+// Convert to hex string for printing/storing
 std::string toHexString(uint32_t value) {
     std::stringstream ss;
     ss << std::hex << std::setw(8) << std::setfill('0') << value;
     return ss.str();
 }
 
+// Takes a value, immediate or from register
+// And convert to uint32
 uint32_t getValue(const std::string& op, std::string registers[], const std::map<std::string, int>& registerMap) {
     if (op[0] == '#') { 
         std::string num = op.substr(1);  // Remove '#'
@@ -472,7 +472,6 @@ uint32_t getValue(const std::string& op, std::string registers[], const std::map
 }
 
 void printArrays(std::string registers[], std::string memory[], int nzcv[]) {
-    // Print register array
     std::cout << "Register array:\n";
     std::cout << "R0 = 0x" << registers[0] << " R1 = 0x" << registers[1]
               << " R2 = 0x" << registers[2] << " R3 = 0x" << registers[3]
@@ -481,10 +480,8 @@ void printArrays(std::string registers[], std::string memory[], int nzcv[]) {
     std::cout << "R8 = 0x" << registers[8] << " R9 = 0x" << registers[9]
               << " R10 = 0x" << registers[10] << " R11 = 0x" << registers[11] << "\n";
     
-    // Print NZCV flags
     std::cout << "NZCV: " << nzcv[0] << nzcv[1] << nzcv[2] << nzcv[3] << "\n";
     
-    // Print memory array
     std::cout << "Memory array:\n";
     std::cout << "0x100 = 0x" << (memory[0].empty() ? "00000000" : memory[0]) << " "
               << "0x104 = 0x" << (memory[1].empty() ? "00000000" : memory[1]) << " "

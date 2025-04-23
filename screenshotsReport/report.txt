@@ -1,0 +1,61 @@
+To run the program:
+From the root directory, use the 'make' command and then './project' to run the executable.
+
+For this project, I initially copy and pasted pp2 into this project, thinking that I would 
+only have to do a few edits, but once I decided to implement the extra credit, there were
+some bigger changes that I needed to make. I added a program counter in driver.cpp which keeps
+track of indices in the instructions array. The processOperation() function now returns an
+incremented program counter. There is also extra logic in driver.cpp when processing the input
+file to verify label vs opcode. 
+
+Since some of our operations now have the 'S' flag for updating the nzcv, I included a struct
+called OpcodeInfo, which holds a boolean value that holds true if the S flag is present, and 
+the nzcv does need to be updated. 
+
+In functions.cpp, I have made several changes and additions. parseOpcode() is a function with 
+a return type of OpcodeInfo struct. It takes the opcode parsed from the input file, and 
+determines if there is a conditional at the end of the opcode. If there is, it stores the 'base'
+opcode and the condition in the struct, if not, it only updates the opcode. shouldExecute() 
+takes the condition stored from parseOpcode(), and checks the nzcv status flags. If true,
+opcode will be taken. updateNZCV checks the necessary flag conditions, and updates if necessary.
+parseOpcode() still uses maps for registers, memory, and opcodes, and also checks that each
+operation has the correct number of operands. I stil used a switch/case statement for the operations,
+and I will describe each operation below. toHexString() is unchanged. getValue converts values
+from either register or immediate into uint32_t. Logic has been included in printArrays() to
+include the nzcv flags.
+
+Description of operations:
+
+ADD: Get destination address and check that all operands are not immediate values. Convert 
+     operands to uint32_t, add, convert to hex and update nzcv if the S flag was present. Print 
+     info. UPdate pc.
+SUB: Get destination address and check that all operands are not immediate values. Convert 
+     operands to uint32_t, subtract, convert to hex and update nzcv if the S flag was present. Print 
+     info. Update pc.
+CMP: No destination address. Does same thing as SUB, but does not store the result anywhere. Instead,
+     it updates the z flag and functionality has been moved to updateNZCV(). Update pc.
+MOV: Get destination address. Convert value to uint32_t (can be register or immediate). Check for 
+     'S' flag, and update nzcv if necessary. Print array, update pc.
+AND: Get destination. Check that second operand is not immediate. Convert operands to uint32_t,
+     do bitwise AND. Check for 'S' flag and update if necessary. Print info. Update pc. 
+ORR: Get destination. Check that second operand is not immediate. Convert operands to uint32_t,
+     do bitwise OR. Check for 'S' flag and update if necessary. Print info. Update pc. 
+EOR: Get destination. Check that second operand is not immediate. Convert operands to uint32_t,
+     do bitwise XOR. Check for 'S' flag and update if necessary. Print info. Update pc. 
+LDR: Get destination address. Check if the second operand is a pointer. If it is a pointer, Remove
+     brackets and convert to hex string to compare with the memory map. Convert the value stored in
+     the map (0 if location does not exist) to uint32_t and load into register. Print info. Update pc
+STR: Get source address. Check if second operand is a pointer. If it is a pointer, remove brackets
+     and convert the address to string for comparing in the memory map. Store into memory. Print array.
+     Update pc.
+LSL: Get destination address. Check that the first two operands are not immediate values. Convert 
+     second operand and the shift value to uint32_t. Do the shift and update registers. Print info.
+     Uptdate nzcv.
+LSR: Get destination address. Check that the first two operands are not immediate values. Convert 
+     second operand and the shift value to uint32_t. Do the shift and update registers. Print info.
+     Uptdate nzcv.
+MVN: Get destination address. Grab value from registers and convert to uint32_t. Invert all the bits.
+     Update flags if necessary. Print info. UPdate pc.
+BEQ: There is a special funcion in functions.cpp which checks for BEQ, since it is not a 5 letter
+     opcode, but still has a conditional at the end. Checks flags and takes the branch if they are 
+     equal. 
